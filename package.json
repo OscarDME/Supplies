@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "react-native-azure-auth": "^1.8.9"
+  }
+}

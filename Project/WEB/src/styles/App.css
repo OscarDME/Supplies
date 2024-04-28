@@ -1,0 +1,121 @@
+  :root {
+    --text: #333333;
+    --background: #ffffff;
+    --primary: #0790cf;
+    --primary-hover:#067BB1;
+    --secondary: #D8F2FE;
+    --secondary-hover: #A0C4E2;
+    --secondary-background:#CCCCCC;
+    --third-background:#f0f0f0;
+    --fourth-background:#e0e0e0;
+    --accent: #aaff00;
+    --accent-hover:#88CC00;
+    --delete:#E53E3E;
+    --delete-hover:#C53030;
+    --easy: #68D391; 
+    --easy-hover: #4FD080; 
+    --medium: #F6E05E; 
+    --medium-hover: #ECC94B; 
+    --hard: #9F7AEA; 
+    --hard-hover: #805AD5;
+  }
+
+body{
+  margin: 0;
+  padding: 0;
+}
+
+
+footer {
+  position: fixed;
+  bottom: 5%;
+  width: 100%;
+}
+
+.App {
+  color: var(--text);
+  box-sizing: border-box;
+  height: 90vh;
+  width: 100%;
+}
+
+.data-area-div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly !important;
+}
+
+.navbarButton {
+  background-color: var(--primary); 
+  color: var(--background) !important;
+  padding: .5rem 1rem !important;
+}
+
+.NavigationBar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between;
+  padding: .5rem 1rem !important;
+  background-color: var(--secondary) !important;
+}
+
+.iconText {
+  margin: 0 .5rem;
+}
+
+.profileButton {
+  margin: .5rem .5rem;
+}
+
+.cta-button {
+  background-color: var(--primary) !important; 
+  border-color: var(--primary) !important;
+  color: var(--background); 
+}
+
+.Navbar-Links {
+  display: flex;
+  align-items: center; 
+  justify-content: center;
+}
+
+.NavLinks {
+  margin: 20px;
+  text-decoration: none;
+  color: var(--text);
+  position: relative; 
+}
+
+.NavLinks::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0; 
+  height: 1px; 
+  background-color: var(--text);
+  transition: width 0.3s ease;
+}
+
+.NavLinks.active-link::before,
+.NavLinks:hover::before {
+  width: 100%; 
+}
+
+
+.NavLinks.active-link {
+  color: var(--text);
+  font-weight: bold;
+  border-bottom: 1px solid var(--text); /* Barra debajo del enlace activo */
+}
+
+.dropdown-item-text-light {
+  font-weight: 270;
+}
+
+
+.ProfileBtn{
+  background-color: transparent !important;
+  color: var(--text) !important;
+}
