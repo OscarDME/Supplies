@@ -49,7 +49,7 @@ export const Products = () => {
                         </div>
                         <div className="flex flex-row lg:flex-column align-items-center lg:align-items-end gap-4 lg:gap-2">
                             <span className="text-2xl font-semibold">${data.price}</span>
-                            <Button icon="pi pi-shopping-cart" label="Add to Cart" disabled={data.inventoryStatus === 'OUTOFSTOCK'}></Button>
+                            <Button icon="pi pi-shopping-cart" label="Añadir al carrito" disabled={data.inventoryStatus === 'OUTOFSTOCK'}></Button>
                             <Tag value={data.inventoryStatus} severity={getSeverity(data)}></Tag>
                         </div>
                     </div>

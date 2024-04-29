@@ -6,6 +6,55 @@
 }
 
 
+
+.p-sidebar-md .p-sidebar-content {
+    padding: 1rem; 
+  }
+  
+  .p-sidebar-md h1 {
+    color: #333; /* Color del título */
+    margin-bottom: 1rem; /* Espaciado debajo del título */
+  }
+  
+  .cart-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem; /* Espaciado entre items */
+    padding: 1rem; /* Padding para cada item */
+    background: #fff; /* Fondo blanco para el item */
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1); /* Sombra suave */
+  }
+  
+  .cart-item img {
+    width: 80px; /* Tamaño de la imagen */
+    height: 80px; /* Tamaño de la imagen */
+    object-fit: cover; /* Para mantener la relación de aspecto */
+    margin-right: 1rem; /* Espaciado a la derecha de la imagen */
+  }
+  
+  .cart-item-detail {
+    flex-grow: 1; /* Para que tome el espacio disponible */
+  }
+  
+  .cart-item-actions {
+    display: flex;
+    align-items: center;
+  }
+  
+  .cart-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: #f4f4f4; /* Fondo para el total */
+    margin-top: 1rem; 
+  }
+  
+  .cart-total h3 {
+    margin: 0; 
+  }
+
 span.flag {
     width: 44px;
     height: 30px;

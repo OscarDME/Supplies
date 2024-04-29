@@ -13,10 +13,10 @@ import "../styles/App.css";
 import config from "../utils/conf";
 import { Button } from 'primereact/button';
 import { Sidebar } from 'primereact/sidebar';
+import Cart from "./Cart/Cart";
 
 export const NavigationBar = () => {
   const { instance, inProgress } = useMsal();
-  const [visible, setVisible] = useState(false);
   const [type, setType] = useState(null);
   let activeAccount;
   const location = useLocation();
@@ -68,14 +68,7 @@ export const NavigationBar = () => {
           </div>
           <div className="Navbar-Profile">  
           <div className="justify-content-center">
-          <Sidebar position="right" visible={visible} onHide={() => setVisible(false)}>
-              <h2>Carrito</h2>
-              <p>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
-                  Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-              </p>
-          </Sidebar>
-              <Button icon="pi pi-shopping-cart" onClick={() => setVisible(true)} />
+          <Cart></Cart>
           </div>
               <Button as="button" onClick={handleLogoutRedirect}>
                 Cerrar sesion
