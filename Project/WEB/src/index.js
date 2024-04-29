@@ -6,8 +6,6 @@ import { BrowserRouter } from "react-router-dom";
 
 import { msalConfig } from "./authConfig.js";
 import App from "./App";
-
-import "bootstrap/dist/css/bootstrap.min.css";
 import "./styles/index.css";
 
 /**

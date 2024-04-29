@@ -1,4 +1,3 @@
-import { Dropdown, DropdownButton, Button } from "react-bootstrap";
 import { useEffect, useState } from "react";
 import {
   AuthenticatedTemplate,
@@ -12,9 +11,12 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import logo from "../assets/Logo.svg";
 import "../styles/App.css";
 import config from "../utils/conf";
+import { Button } from 'primereact/button';
+import { Sidebar } from 'primereact/sidebar';
 
 export const NavigationBar = () => {
   const { instance, inProgress } = useMsal();
+  const [visible, setVisible] = useState(false);
   const [type, setType] = useState(null);
   let activeAccount;
   const location = useLocation();
@@ -60,78 +62,24 @@ export const NavigationBar = () => {
         </NavLink>
         <AuthenticatedTemplate>
           <div className="Navbar-Links">
-            <NavLink id="Progress" to="/Progress" className="NavLinks">
-              Progreso
-            </NavLink>
-            <NavLink id="Routines" to="/Routines" className="NavLinks">
-              Asignar Rutinas
-            </NavLink>
-            <NavLink id="MyRoutines" to="/MyRoutines" className="NavLinks">
-              Rutinas
-            </NavLink>
-            <NavLink id="Diets" to="/Diets" className="NavLinks">
-              Asignar Dietas
-            </NavLink>
-            <NavLink id="Clients" to="/Clients" className="NavLinks">
-              Clientes
-            </NavLink>
-            <NavLink id="Exercises" to="/Exercises" className="NavLinks">
-              Ejercicios
-            </NavLink>
-            <NavLink id="Food" to="/Food" className="NavLinks">
-              Alimentos y Recetas
-            </NavLink>
-            <NavLink id="Appointment" to="/Appointment" className="NavLinks">
-              Citas
-            </NavLink>
-            <NavLink id="Requests" to="/Requests" className="NavLinks">
-              Solicitudes
-            </NavLink>
-            <NavLink id="Users" to="/Users" className="NavLinks">
-              Usuarios
-            </NavLink>
-            <NavLink
-              id="Food_management"
-              to="/Food_management"
-              className="NavLinks"
-            >
-              Gestión de Alimentos
-            </NavLink>
-            <NavLink
-              id="Recipes_management"
-              to="/Recipes_management"
-              className="NavLinks"
-            >
-              Gestión de Recetas
-            </NavLink>
-            <NavLink
-              id="Exercises_management"
-              to="/Exercises_management"
-              className="NavLinks"
-            >
-              Gestión de Ejercicios
+            <NavLink id="Products" to="/Products" className="NavLinks">
+              Productos
             </NavLink>
           </div>
-          <div>
-            <DropdownButton
-              className="ProfileBtn"
-              drop="start"
-              title={<i className="bi bi-person-fill h2"></i>}
-            >
-              <Dropdown.ItemText className="dropdown-item-text-light">
-                Mi Perfil
-              </Dropdown.ItemText>
-              <Dropdown.Item as="button" onClick={handleProfileEdit}>
-                Editar Perfil
-              </Dropdown.Item>
-              <Dropdown.Divider />
-              <Dropdown.Item as="button" onClick={handleLogoutRedirect}>
-                Cerrar sesion:{" "}
-                {activeAccount && activeAccount.username
-                  ? activeAccount.username
-                  : "Unknown"}
-              </Dropdown.Item>
-            </DropdownButton>
+          <div className="Navbar-Profile">  
+          <div className="justify-content-center">
+          <Sidebar position="right" visible={visible} onHide={() => setVisible(false)}>
+              <h2>Carrito</h2>
+              <p>
+                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
+                  Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+              </p>
+          </Sidebar>
+              <Button icon="pi pi-shopping-cart" onClick={() => setVisible(true)} />
+          </div>
+              <Button as="button" onClick={handleLogoutRedirect}>
+                Cerrar sesion
+            </Button>
           </div>
         </AuthenticatedTemplate>
         <UnauthenticatedTemplate>

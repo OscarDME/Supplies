@@ -8,20 +8,8 @@ import { PageLayout } from './components/PageLayout';
 import { Home } from './pages/Home';
 import { b2cPolicies, protectedResources } from './authConfig';
 import { compareIssuingPolicy } from './utils/claimUtils';
-import { Progress } from './pages/Progress';
-import {Routines} from './pages/Routines';
-import {MyRoutines} from './pages/MyRoutines';
-import {Diets} from './pages/Diets';
-import {Clients} from './pages/Clients';
-import {Exercises} from './pages/Exercises';
-import {Food} from './pages/Food';
-import {Appointment} from './pages/Appointment';
-import {Requests} from './pages/Requests';
-import { Users } from './pages/Users';
-import { Recipes_management } from './pages/Recipes_management';
-import { Exercises_management } from './pages/Exercises_management';
-import { Food_management } from './pages/Food_management';
-import './firebaseConfig';
+import {Products} from './pages/Products';
+import { PrimeReactProvider } from 'primereact/api';
 
 
 
@@ -109,19 +97,7 @@ const Pages = () => {
     }, [instance]);
     return (
         <Routes>
-            <Route path="/Routines" element={<Routines />} />
-            <Route path="/Progress" element={<Progress />} />
-            <Route path="/MyRoutines" element={<MyRoutines />} />
-            <Route path="/Diets" element={<Diets />} />
-            <Route path="/Clients" element={<Clients />} />
-            <Route path="/Exercises" element={<Exercises />} />
-            <Route path="/Food" element={<Food />} />
-            <Route path="/Appointment" element={<Appointment />} />
-            <Route path="/Requests" element={<Requests />} />
-            <Route path="/Users" element={<Users />} />
-            <Route path="/Recipes_management" element={<Recipes_management />} />
-            <Route path="/Exercises_management" element={<Exercises_management />} />
-            <Route path="/Food_management" element={<Food_management/>} />
+            <Route path="/Products" element={<Products />} />
             <Route path="/" element={<Home />} />
         </Routes>
     );
@@ -137,9 +113,11 @@ const Pages = () => {
 const App = ({ instance }) => {
     return (
         <MsalProvider instance={instance}>
+        <PrimeReactProvider>
             <PageLayout>
                 <Pages />
             </PageLayout>
+            </PrimeReactProvider>
         </MsalProvider>
     );
 };

@@ -87,6 +87,13 @@ footer {
   position: relative; 
 }
 
+.Navbar-Profile{
+  display: flex;
+  align-items: center; 
+  justify-content: center;
+  column-gap: 30px;
+}
+
 .NavLinks::before {
   content: "";
   position: absolute;
