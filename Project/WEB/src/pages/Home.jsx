@@ -1,4 +1,6 @@
 import { AuthenticatedTemplate, UnauthenticatedTemplate } from "@azure/msal-react";
+import { useEffect } from 'react';
+import { config } from "../utils/conf";
 import { useMsal } from "@azure/msal-react";
 import { Container } from "react-bootstrap";
 import { InteractionStatus } from "@azure/msal-browser"; 
@@ -14,6 +16,32 @@ export const Home = () => {
     
     const { instance } = useMsal();    
     const activeAccount = instance.getActiveAccount();
+    const ID_Usuario = activeAccount.idTokenClaims?.oid;
+
+    
+    useEffect(() => {
+        // Llamada a la API para verificar e insertar el usuario en la base de datos
+        if (activeAccount) {
+            fetch(`${config.apiBaseUrl}/verifyAndInsertUser`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    ID_Usuario: ID_Usuario,
+                    Nombre_Usuario: activeAccount.name
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Respuesta del servidor:", data);
+            })
+            .catch(error => {
+                console.error('Error al verificar o insertar el usuario:', error);
+            });
+        }
+    }, [activeAccount]);
+    
 
     return (
         <>

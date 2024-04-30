@@ -1,6 +1,6 @@
 import React from "react";
 
-const config = {
+export const config = {
     apiBaseUrl: 'http://localhost:3001/api',
 };
 
