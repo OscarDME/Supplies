@@ -6,6 +6,8 @@ import { EventType } from '@azure/msal-browser';
 import './styles/App.css';
 import { PageLayout } from './components/PageLayout';
 import { Home } from './pages/Home';
+import { Pedidos } from './pages/Pedidos';
+import Checkout from './components/Checkout'; // Importa el componente Checkout
 import { b2cPolicies, protectedResources } from './authConfig';
 import { compareIssuingPolicy } from './utils/claimUtils';
 import {Products} from './pages/Products';
@@ -98,6 +100,8 @@ const Pages = () => {
     return (
         <Routes>
             <Route path="/Products" element={<Products />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/Orders" element={<Pedidos />} />    
             <Route path="/" element={<Home />} />
         </Routes>
     );

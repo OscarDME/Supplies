@@ -1,0 +1,35 @@
+.checkout-container {
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+}
+
+.checkout-content {
+    display: flex;
+    max-width: 1200px;
+    width: 100%;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    border-radius: 8px;
+}
+
+.checkout-form, .cart-summary {
+    flex: 1;
+    padding: 20px;
+}
+
+.checkout-form {
+    border-right: 1px solid #ccc;
+}
+
+.cart-summary {
+    padding-left: 20px;
+}
+
+.cart-item-summary {
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.cart-item-summary:last-child {
+    border-bottom: none;
+}

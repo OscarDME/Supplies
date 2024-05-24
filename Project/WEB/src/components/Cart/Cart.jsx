@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from 'primereact/button';
 import { Sidebar } from 'primereact/sidebar';
+import { useNavigate } from 'react-router-dom';
 import { InputNumber } from 'primereact/inputnumber';
 import { Chip } from 'primereact/chip';
 import { Badge } from 'primereact/badge';
@@ -10,7 +11,7 @@ import { useMsal } from "@azure/msal-react";
 export default function Cart() {
     const [visible, setVisible] = useState(false);
     const [items, setItems] = useState([]);
-
+    const navigate = useNavigate();
     const { instance } = useMsal();
     const activeAccount = instance.getActiveAccount();
     const homeAccountId = activeAccount.homeAccountId;
@@ -40,16 +41,43 @@ export default function Cart() {
   
 
   const handleQuantityChange = (changeType, id) => {
-    setItems(items.map(item => {
+    const newItems = items.map(item => {
         if (item.ID_Producto === id) {
-            return {
-                ...item,
-                Cantidad: changeType === 'increase' ? item.Cantidad + 1 : item.Cantidad > 1 ? item.Cantidad - 1 : 1
-            };
+            const newQuantity = changeType === 'increase' ? item.Cantidad + 1 : item.Cantidad > 1 ? item.Cantidad - 1 : 1;
+            updateQuantityOnServer(id, newQuantity); // Llamar al servidor para actualizar la base de datos
+            return { ...item, Cantidad: newQuantity };
         }
         return item;
-    }));
+    });
+    setItems(newItems);
 };
+
+const updateQuantityOnServer = (id, quantity) => {
+    fetch(`${config.apiBaseUrl}/updateProductQuantity`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            ID_Usuario: ID_Usuario,
+            ID_Producto: id,
+            Cantidad: quantity
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            console.log(data.message);
+        } else {
+            console.error('Error al actualizar la cantidad del producto');
+        }
+    })
+    .catch(error => {
+        console.error('Error al actualizar la cantidad del producto en el servidor:', error);
+    });
+};
+
+
 
     const calculateTotal = () => {
         return items.reduce((acc, item) => acc + item.Precio * item.Cantidad, 0);
@@ -84,8 +112,9 @@ export default function Cart() {
 
     const handleClose = () => setVisible(false);
     const handleCheckout = () => {
-        // Implementar la lógica de checkout aquí
+        navigate('/checkout', { state: { cartItems: items, total: calculateTotal() } });
     };
+    
 
     return (
         <>

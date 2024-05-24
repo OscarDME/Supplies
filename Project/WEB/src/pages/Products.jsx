@@ -1,35 +1,44 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from 'primereact/button';
 import { DataScroller } from 'primereact/datascroller';
 import { config } from "../utils/conf";
 import { Tag } from 'primereact/tag';
+import { Toast } from 'primereact/toast'; 
 import 'primereact/resources/primereact.css';
 import 'primereact/resources/themes/lara-light-indigo/theme.css';
 import "../styles/Products.css";
 import 'primeicons/primeicons.css';
 import 'primeflex/primeflex.css';
-import { useMsal } from "@azure/msal-react"; // Asegúrate de importar useMsal
+import { useMsal } from "@azure/msal-react"; 
 
 
 export const Products = () => { 
     const [products, setProducts] = useState([]);
+    const [cart, setCart] = useState([]); 
+
 
     const { instance } = useMsal();    
     const activeAccount = instance.getActiveAccount();
     const homeAccountId = activeAccount.homeAccountId;
     const parts = homeAccountId.split('-');
     const ID_Usuario = parts.slice(0, 5).join('-');
+    const toast = useRef(null); 
+
 
     const getSeverity = (product) => {
         if (product.Stock) {
-            return 'success'; // Verde para productos en stock
+            return 'success'; 
         } else {
-            return 'danger'; // Rojo para productos sin stock
+            return 'danger';
         }
     }
 
     const addToCart = (productId) => {
-        // Obtener el ID del carrito de alguna manera, aquí uso un ejemplo estático    
+        if (isProductInCart(productId)) {
+            toast.current.show({ severity: 'warn', summary: 'Producto ya en el carrito', detail: 'Ya has añadido este producto al carrito.', life: 3000 });
+            return;
+        }
+    
         fetch(`${config.apiBaseUrl}/addProductToCart`, {
             method: 'POST',
             headers: {
@@ -40,17 +49,33 @@ export const Products = () => {
                 ID_Producto: productId
             })
         })
-        .then(response => response.json())
-        .then(data => {
-            window.location.reload();
-            console.log('Producto añadido al carrito:', data);
-            // Puedes mostrar un mensaje o actualizar el estado aquí si es necesario
+        .then(response => {
+            if (response.ok) {  // Si el estado HTTP es 200-299 (éxito)
+                updateCart(productId);
+                window.location.reload();
+                return response.json().then(data => toast.current.show({ severity: 'success', summary: 'Añadido al carrito', detail: data.message, life: 3000 }));
+            } else if (response.status === 400) {
+                return response.json().then(data => toast.current.show({ severity: 'error', summary: 'Error al añadir', detail: data.message, life: 3000 }));
+            } else {
+                throw new Error('Unexpected error occurred');
+            }
         })
         .catch(error => {
             console.error('Error al añadir producto al carrito:', error);
+            toast.current.show({ severity: 'error', summary: 'Error al añadir', detail: 'No se pudo añadir el producto al carrito debido a un error interno.', life: 3000 });
         });
-    };
+    };      
     
+    const updateCart = (productId) => {
+        setCart(prevCart => {
+            const productSet = new Set([...prevCart, productId]);
+            return [...productSet];
+        });
+    }
+    
+    const isProductInCart = (productId) => {
+        return cart.includes(productId);
+    };
 
     const itemTemplate = (data) => {
         return (
@@ -82,7 +107,7 @@ export const Products = () => {
     };
 
     useEffect(() => {
-        fetch(`${config.apiBaseUrl}/getAllProducts`) // Asume que esta es la URL de tu endpoint para obtener productos
+        fetch(`${config.apiBaseUrl}/getAllProducts`) 
             .then(response => response.json())
             .then(data => {
                 setProducts(data);
@@ -94,6 +119,7 @@ export const Products = () => {
 
     return (
         <div className="card">
+            <Toast ref={toast} />
             <DataScroller value={products} itemTemplate={itemTemplate} rows={10} inline scrollHeight="500px" header="Haga scroll para cargar más productos..." />
         </div>
     )

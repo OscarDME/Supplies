@@ -65,6 +65,9 @@ export const NavigationBar = () => {
             <NavLink id="Products" to="/Products" className="NavLinks">
               Productos
             </NavLink>
+            <NavLink id="Orders" to="/Orders" className="NavLinks">  {/* Agregar la sección de Pedidos */}
+              Pedidos
+            </NavLink>
           </div>
           <div className="Navbar-Profile">  
           <div className="justify-content-center">
