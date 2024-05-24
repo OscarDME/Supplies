@@ -69,6 +69,16 @@ export const NavigationBar = () => {
               Pedidos
             </NavLink>
           </div>
+          <div className="Navbar-Links">
+            <NavLink id="Inventory" to="/Inventory" className="NavLinks">
+              Inventario
+            </NavLink>
+          </div>
+          <div className="Navbar-Links">
+            <NavLink id="NewProduct" to="/NewProduct" className="NavLinks">
+              Añadir Producto
+            </NavLink>
+          </div>
           <div className="Navbar-Profile">  
           <div className="justify-content-center">
           <Cart></Cart>

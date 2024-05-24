@@ -12,6 +12,8 @@ import { b2cPolicies, protectedResources } from './authConfig';
 import { compareIssuingPolicy } from './utils/claimUtils';
 import {Products} from './pages/Products';
 import { PrimeReactProvider } from 'primereact/api';
+import { NewProduct } from './pages/NewProduct';
+import { Inventory } from './pages/Inventory';
 
 
 
@@ -102,6 +104,8 @@ const Pages = () => {
             <Route path="/Products" element={<Products />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/Orders" element={<Pedidos />} />    
+            <Route path="/NewProduct" element={<NewProduct />} />
+            <Route path="/Inventory" element={<Inventory />} />
             <Route path="/" element={<Home />} />
         </Routes>
     );
