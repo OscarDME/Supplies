@@ -2,6 +2,7 @@ export const querys = {
     checkUserExistence: "SELECT ID_Usuario FROM Usuario WHERE ID_Usuario = @ID_Usuario OR Nombre_Usuario = @Nombre_Usuario",
     insertUser: "INSERT INTO Usuario (ID_Usuario, Nombre_Usuario, ID_TipoUsuario) VALUES (@ID_Usuario, @Nombre_Usuario, 1)",
     getAllProducts: "SELECT p.ID_Producto, p.Producto, p.Descripcion, p.Precio, p.ID_Tipo, p.Stock, t.Tipo FROM Producto p LEFT JOIN Tipo t ON p.ID_Tipo = t.ID_Tipo",
+    getAllProducts2: "SELECT * FROM Producto",
     createCartForUser: "INSERT INTO Carrito (ID_Usuario) VALUES (@ID_Usuario)",
     addProductToCart: `
         INSERT INTO ProductosCarrito (ID_Carrito, ID_Producto, Cantidad)
@@ -60,4 +61,15 @@ export const querys = {
   WHERE 
     p.ID_Usuario = @ID_Usuario
 `,
+    addProduct: "INSERT INTO Producto (Producto, ID_Tipo, Descripcion, Precio, Stock, Cantidad) VALUES (@Producto, @ID_Tipo, @Descripcion, @Precio, @Stock, 1)",
+
+    updateProduct: `
+  UPDATE Producto
+  SET Producto = COALESCE(@Producto, Producto),
+      Precio = COALESCE(@Precio, Precio),
+      Cantidad = COALESCE(@Cantidad, Cantidad)
+  WHERE ID_Producto = @ID_Producto
+`,
+    deleteProduct: 'DELETE FROM Producto WHERE ID_Producto = @ID_Producto',
+
 };

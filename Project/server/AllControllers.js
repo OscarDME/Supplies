@@ -265,3 +265,101 @@ export const getPedidosByUser = async (req, res) => {
       return res.status(500).json({ error: error.message });
   }
 };
+
+export const addProduct = async (req, res) => {
+    try {
+      // Obtener los datos del cuerpo de la solicitud
+      const { Producto, ID_Tipo, Descripcion, Precio, Stock } = req.body;
+  
+      console.log("Datos del cuerpo de la solicitud:", req.body);
+  
+      // Realizar la conexión a la base de datos
+      const pool = await getConnection();
+      console.log("Conexión a la base de datos exitosa");
+  
+      // Insertar el nuevo producto
+      const insertResult = await pool
+        .request()
+        .input('Producto', sql.VarChar, Producto)
+        .input('ID_Tipo', sql.Int, ID_Tipo)
+        .input('Descripcion', sql.VarChar, Descripcion)
+        .input('Precio', sql.Decimal(10, 2), Precio)
+        .input('Stock', sql.Bit, Stock)
+        .query(querys.addProduct);
+  
+      if (insertResult.rowsAffected[0] > 0) {
+        console.log("Producto agregado correctamente", insertResult);
+        return res.status(201).json({ message: "Producto agregado correctamente" });
+      } else {
+        console.error("Error al agregar el producto");
+        return res.status(500).json({ error: "No se pudo agregar el producto" });
+      }
+    } catch (error) {
+      console.error("Error al agregar el producto:", error);
+      return res.status(500).json({ error: error.message });
+    }
+  };
+
+  export const getProducts = async (req, res) => {
+    try {
+      const pool = await getConnection();
+      const result = await pool.request().query(querys.getAllProducts2);
+  
+      if (result.recordset.length > 0) {
+        console.log("Productos obtenidos correctamente", result.recordset);
+        return res.status(200).json(result.recordset);
+      } else {
+        console.log("No se encontraron productos");
+        return res.status(404).json({ message: "No se encontraron productos" });
+      }
+    } catch (error) {
+      console.error("Error al obtener los productos:", error);
+      return res.status(500).json({ error: error.message });
+    }
+  };
+
+  export const updateProduct = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { Producto, Precio, Cantidad } = req.body;
+  
+      const pool = await getConnection();
+      const result = await pool
+        .request()
+        .input('ID_Producto', sql.Int, id)
+        .input('Producto', sql.VarChar, Producto)
+        .input('Precio', sql.Decimal(10, 2), Precio)
+        .input('Cantidad', sql.Int, Cantidad)
+        .query(querys.updateProduct);
+  
+      if (result.rowsAffected[0] > 0) {
+        return res.status(200).json({ message: 'Producto actualizado correctamente' });
+      } else {
+        return res.status(404).json({ message: 'Producto no encontrado' });
+      }
+    } catch (error) {
+      console.error('Error al actualizar el producto:', error);
+      return res.status(500).json({ error: error.message });
+    }
+  };
+
+  export const deleteProduct = async (req, res) => {
+    try {
+      const { id } = req.params;
+  
+      const pool = await getConnection();
+      const result = await pool
+        .request()
+        .input('ID_Producto', sql.Int, id)
+        .query(querys.deleteProduct);
+  
+      if (result.rowsAffected[0] > 0) {
+        return res.status(200).json({ message: 'Producto eliminado correctamente' });
+      } else {
+        return res.status(404).json({ message: 'Producto no encontrado' });
+      }
+    } catch (error) {
+      console.error('Error al eliminar el producto:', error);
+      return res.status(500).json({ error: error.message });
+    }
+  };
