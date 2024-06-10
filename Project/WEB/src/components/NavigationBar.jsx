@@ -65,8 +65,15 @@ export const NavigationBar = () => {
             <NavLink id="Products" to="/Products" className="NavLinks">
               Productos
             </NavLink>
-            <NavLink id="Orders" to="/Orders" className="NavLinks">  {/* Agregar la sección de Pedidos */}
+          </div>
+          <div className="Navbar-Links">
+          <NavLink id="Orders" to="/Orders" className="NavLinks">  
               Pedidos
+            </NavLink>
+          </div>
+          <div className="Navbar-Links">
+          <NavLink id="MisPedidos" to="/MisPedidos" className="NavLinks"> 
+              Mis Pedidos
             </NavLink>
           </div>
           <div className="Navbar-Links">
