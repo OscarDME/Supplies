@@ -186,7 +186,6 @@ export const createOrder = async (req, res) => {
       if (result.recordset.length > 0) {
           const ID_Pedido = result.recordset[0].ID_Pedido;
 
-          // Añadir cada producto al pedido
           for (const producto of productos) {
               await pool.request()
                   .input('ID_Pedido', sql.Int, ID_Pedido)
@@ -249,7 +248,7 @@ export const cancelOrder = async (req, res) => {
 
 export const getPedidosByUser = async (req, res) => {
   try {
-      const  ID_Usuario  = req.params.id;  // Obtener el ID del usuario de los parámetros del request
+      const  ID_Usuario  = req.params.id;  
       const pool = await getConnection();
       const result = await pool.request()
           .input('ID_Usuario', sql.VarChar, ID_Usuario)
@@ -268,16 +267,13 @@ export const getPedidosByUser = async (req, res) => {
 
 export const addProduct = async (req, res) => {
     try {
-      // Obtener los datos del cuerpo de la solicitud
       const { Producto, ID_Tipo, Descripcion, Precio, Stock } = req.body;
   
       console.log("Datos del cuerpo de la solicitud:", req.body);
   
-      // Realizar la conexión a la base de datos
       const pool = await getConnection();
       console.log("Conexión a la base de datos exitosa");
   
-      // Insertar el nuevo producto
       const insertResult = await pool
         .request()
         .input('Producto', sql.VarChar, Producto)
