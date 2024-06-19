@@ -72,6 +72,11 @@ export const NavigationBar = () => {
             </NavLink>
           </div>
           <div className="Navbar-Links">
+          <NavLink id="Ventas" to="/Ventas" className="NavLinks">  
+              Ventas
+            </NavLink>
+          </div>
+          <div className="Navbar-Links">
           <NavLink id="MisPedidos" to="/MisPedidos" className="NavLinks"> 
               Mis Pedidos
             </NavLink>

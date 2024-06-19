@@ -15,6 +15,7 @@ import { PrimeReactProvider } from 'primereact/api';
 import { NewProduct } from './pages/NewProduct';
 import { Inventory } from './pages/Inventory';
 import MisPedidos from './pages/MisPedidos';
+import ManageSales from './pages/ManageSales';
 
 
 
@@ -108,6 +109,7 @@ const Pages = () => {
             <Route path="/NewProduct" element={<NewProduct />} />
             <Route path="/Inventory" element={<Inventory />} />
             <Route path="/MisPedidos" element={<MisPedidos />} />
+            <Route path="/Ventas" element={<ManageSales />} />
             <Route path="/" element={<Home />} />
         </Routes>
     );
