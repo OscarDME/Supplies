@@ -248,20 +248,30 @@ export const cancelOrder = async (req, res) => {
 
 export const getPedidosByUser = async (req, res) => {
   try {
-      const  ID_Usuario  = req.params.id;  
-      const pool = await getConnection();
-      const result = await pool.request()
-          .input('ID_Usuario', sql.VarChar, ID_Usuario)
-          .query(querys.getPedidosByUser);
+    const ID_Usuario = req.params.id;
+    const pool = await getConnection();
+    const result = await pool.request()
+      .input('ID_Usuario', sql.VarChar, ID_Usuario)
+      .query(querys.getPedidosByUser);
 
-      if (result.recordset.length > 0) {
-          return res.status(200).json(result.recordset);
-      } else {
-          return res.status(404).json({ message: "No se encontraron pedidos para el usuario especificado" });
-      }
+    console.log(result.recordset);
+
+    if (result.recordset.length > 0) {
+      const pedidos = result.recordset.map(pedido => ({
+        ID_Pedido: pedido.ID_Pedido,
+        FechaCreacion: pedido.FechaCreacion,
+        EstadoPedido: pedido.EstadoPedido,
+        Total: pedido.Total,
+        NombreProductos: pedido.NombreProductos.split(', ')
+      }));
+
+      return res.status(200).json(pedidos);
+    } else {
+      return res.status(404).json({ message: "No se encontraron pedidos para el usuario especificado" });
+    }
   } catch (error) {
-      console.error("Error al obtener los pedidos:", error);
-      return res.status(500).json({ error: error.message });
+    console.error("Error al obtener los pedidos:", error);
+    return res.status(500).json({ error: error.message });
   }
 };
 
@@ -357,5 +367,45 @@ export const addProduct = async (req, res) => {
     } catch (error) {
       console.error('Error al eliminar el producto:', error);
       return res.status(500).json({ error: error.message });
+    }
+  };
+
+  export const deleteCanceledOrder = async (req, res) => {
+    try {
+      const { ID_Pedido } = req.body;
+      const pool = await getConnection();
+  
+      // Verificar el estado del pedido antes de eliminarlo
+      const checkQuery = `
+        SELECT EstadoPedido 
+        FROM Pedidos 
+        WHERE ID_Pedido = @ID_Pedido
+      `;
+      const checkResult = await pool.request()
+        .input('ID_Pedido', sql.Int, ID_Pedido)
+        .query(checkQuery);
+  
+      if (checkResult.recordset.length === 0) {
+        return res.status(404).json({ message: "No se encontró el pedido" });
+      }
+  
+      const estado = checkResult.recordset[0].EstadoPedido;
+      if (estado !== 'Cancelado') {
+        return res.status(400).json({ message: "Solo se pueden eliminar pedidos cancelados" });
+      }
+  
+      // Eliminar el pedido si está cancelado
+      const deleteQuery = `
+        DELETE FROM Pedidos 
+        WHERE ID_Pedido = @ID_Pedido
+      `;
+      await pool.request()
+        .input('ID_Pedido', sql.Int, ID_Pedido)
+        .query(deleteQuery);
+  
+      return res.status(200).json({ message: "Pedido eliminado correctamente" });
+    } catch (error) {
+      console.error("Error al eliminar el pedido:", error);
+      return res.status(500).json({ error: "Error al eliminar el pedido" });
     }
   };

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { verifyAndInsertUser, getAllProducts, addProductToCart, removeProductFromCart, getCartProducts, updateProductQuantity, createOrder, cancelOrder, getPedidosByUser, addProduct, getProducts, updateProduct, deleteProduct } from "../AllControllers.js";
+import { verifyAndInsertUser, getAllProducts, addProductToCart, removeProductFromCart, getCartProducts, updateProductQuantity, createOrder, cancelOrder, getPedidosByUser, addProduct, getProducts, updateProduct, deleteProduct, deleteCanceledOrder } from "../AllControllers.js";
 
 const router = Router();
 
@@ -16,7 +16,7 @@ router.post("/producto", addProduct);
 router.get("/producto", getProducts);
 router.put('/producto/:id', updateProduct);
 router.delete('/producto/:id', deleteProduct);
-
+router.post("/deleteCanceledOrder", deleteCanceledOrder);
 
 export default router;
 

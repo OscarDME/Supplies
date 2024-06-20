@@ -1,13 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import '../styles/Checkout.css';
 import { config } from "../utils/conf";
 import { useMsal } from "@azure/msal-react"; 
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { Toast } from 'primereact/toast';
 
+const stripePromise = loadStripe('pk_test_51PQHcvRpTMMo5ccd9HQ7f6LgjDUAfoVX6nY1uJzjdN7wsKbz6VV4ynOVIrGGcQNu5aiX2PDhtffnAY0GuqgpU37C009is9tPIE');
+
+const CheckoutForm = ({ total, onSubmit }) => {
+    const stripe = useStripe();
+    const elements = useElements();
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+
+        if (!stripe || !elements) {
+            return;
+        }
+
+        const cardElement = elements.getElement(CardElement);
+
+        const { error, token } = await stripe.createToken(cardElement);
+
+        if (error) {
+            console.error('Error al crear el token', error);
+        } else {
+            onSubmit(token);
+        }
+    };
+
+    return (
+        <form onSubmit={handleSubmit}>
+            <CardElement />
+            <Button label="Confirmar Pedido" type="submit" className="p-button-success" />
+        </form>
+    );
+};
 
 const Checkout = () => {
+    const toast = useRef(null);
     const { instance } = useMsal();
     const activeAccount = instance.getActiveAccount();
     const homeAccountId = activeAccount.homeAccountId;
@@ -27,14 +62,12 @@ const Checkout = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
+    const handleSubmit = async (token) => {
         // Datos del pedido
         const orderData = {
             ID_Usuario: ID_Usuario,
             Total: total,
-            MetodoPago: "Tarjeta", // Sustituir por el método de pago seleccionado por el usuario
+            MetodoPago: token.id,
             DireccionEnvio: formData.direccion,
             NombreReceptor: formData.nombre,
             ApellidoReceptor: formData.apellido,
@@ -44,33 +77,75 @@ const Checkout = () => {
                 PrecioUnitario: item.Precio
             }))
         };
+        console.log(token, total);
 
-        // Llamada al backend para crear el pedido
-        const orderResponse = await fetch(`${config.apiBaseUrl}/createOrder`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(orderData)
-        });
+        try {
+            console.log("Entrando");
+            const chargeResponse = await fetch('http://localhost:3002/charge', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ token, amount: total * 100 }), // Monto en centavos
+            });
 
-        if (orderResponse.ok) {
-            const { ID_Pedido } = await orderResponse.json();
-            // Ahora añadir cada producto al pedido
-            for (const item of cartItems) {
-                await fetch(`${config.apiBaseUrl}/addProductToOrder`, {
+            if (chargeResponse.ok) {
+                console.log('Pago realizado:', await chargeResponse.json());
+
+                // Llamada al backend para crear el pedido
+                const orderResponse = await fetch(`${config.apiBaseUrl}/createOrder`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        ID_Pedido: ID_Pedido,
-                        ID_Producto: item.ID_Producto,
-                        Cantidad: item.Cantidad,
-                        PrecioUnitario: item.Precio
-                    })
+                    body: JSON.stringify(orderData)
                 });
+
+                if (orderResponse.ok) {
+                    toast.current.show({
+                        severity: 'success',
+                        summary: 'Pedido realizado',
+                        detail: 'Tu pedido ha sido procesado con éxito.',
+                        life: 3000
+                    });
+                    const { ID_Pedido } = await orderResponse.json();
+                    // Ahora añadir cada producto al pedido
+                    for (const item of cartItems) {
+                        await fetch(`${config.apiBaseUrl}/addProductToOrder`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                ID_Pedido: ID_Pedido,
+                                ID_Producto: item.ID_Producto,
+                                Cantidad: item.Cantidad,
+                                PrecioUnitario: item.Precio
+                            })
+                        });
+                    }
+                    navigate('/products'); // Redirigir a productos después de crear el pedido
+                } else {
+                    console.error('Error al crear el pedido');
+                    toast.current.show({
+                        severity: 'error',
+                        summary: 'Error al crear el pedido',
+                        detail: 'Ha ocurrido un error al crear tu pedido. Por favor, inténtalo de nuevo.',
+                        life: 3000
+                    });                }
+            } else {
+                console.error('Error al procesar el pago:', await chargeResponse.json());
+                    toast.current.show({
+                        severity: 'error',
+                        summary: 'Error al crear el pedido',
+                        detail: 'Ha ocurrido un error al crear tu pedido. Por favor, inténtalo de nuevo.',
+                        life: 3000
+                    }); 
             }
-            navigate('/products'); // Redirigir a productos después de crear el pedido
-        } else {
-            console.error('Error al crear el pedido');
-            // Manejar errores aquí
+        } catch (error) {
+            console.error('Error al enviar el pago al servidor:', error);
+                    toast.current.show({
+                        severity: 'error',
+                        summary: 'Error al crear el pedido',
+                        detail: 'Ha ocurrido un error al crear tu pedido. Por favor, inténtalo de nuevo.',
+                        life: 3000
+                    }); 
         }
     };
 
@@ -79,7 +154,7 @@ const Checkout = () => {
             <div className="checkout-content">
                 <div className="checkout-form">
                     <h1>Información de Envío</h1>
-                    <form onSubmit={handleSubmit} className="p-fluid">
+                    <div className="p-fluid">
                         <div className="p-field">
                             <label htmlFor="nombre">Nombre</label>
                             <InputText id="nombre" type="text" name="nombre" value={formData.nombre} onChange={handleChange} />
@@ -92,8 +167,11 @@ const Checkout = () => {
                             <label htmlFor="direccion">Dirección</label>
                             <InputText id="direccion" type="text" name="direccion" value={formData.direccion} onChange={handleChange} />
                         </div>
-                        <Button label="Confirmar Pedido" type="submit" className="p-button-success" />
-                    </form>
+                        <label htmlFor="nombre">Datos de pago</label>
+                        <Elements stripe={stripePromise}>
+                            <CheckoutForm total={total} onSubmit={handleSubmit} />
+                        </Elements>
+                    </div>
                 </div>
                 <div className="cart-summary">
                     <h2>Resumen del Pedido</h2>
@@ -105,6 +183,7 @@ const Checkout = () => {
                     <span>Total: ${total.toFixed(2)}</span>
                 </div>
             </div>
+            <Toast ref={toast} />
         </div>
     );
 };

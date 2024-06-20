@@ -46,21 +46,21 @@ export const querys = {
         WHERE ID_Pedido = @ID_Pedido
     `,
     getPedidosByUser: `
-  SELECT 
-    p.ID_Pedido, 
-    p.FechaCreacion, 
-    p.EstadoPedido, 
-    p.Total, 
-    d.Cantidad, 
-    d.PrecioUnitario, 
-    pr.Producto as NombreProducto 
-  FROM 
-    Pedidos p 
-    JOIN DetallePedido d ON p.ID_Pedido = d.ID_Pedido
-    JOIN Producto pr ON d.ID_Producto = pr.ID_Producto
-  WHERE 
-    p.ID_Usuario = @ID_Usuario
-`,
+    SELECT 
+      p.ID_Pedido,
+      p.FechaCreacion,
+      p.EstadoPedido,
+      p.Total,
+      STRING_AGG(pr.Producto, ', ') AS NombreProductos
+    FROM 
+      Pedidos p
+      JOIN DetallePedido d ON p.ID_Pedido = d.ID_Pedido
+      JOIN Producto pr ON d.ID_Producto = pr.ID_Producto
+    WHERE
+      p.ID_Usuario = @ID_Usuario
+    GROUP BY
+      p.ID_Pedido, p.FechaCreacion, p.EstadoPedido, p.Total
+  `,
     addProduct: "INSERT INTO Producto (Producto, ID_Tipo, Descripcion, Precio, Stock, Cantidad) VALUES (@Producto, @ID_Tipo, @Descripcion, @Precio, @Stock, 1)",
 
     updateProduct: `
@@ -71,5 +71,13 @@ export const querys = {
   WHERE ID_Producto = @ID_Producto
 `,
     deleteProduct: 'DELETE FROM Producto WHERE ID_Producto = @ID_Producto',
-
+    checkOrderState: `
+    SELECT EstadoPedido 
+    FROM Pedidos 
+    WHERE ID_Pedido = @ID_Pedido
+  `,
+  deleteCanceledOrder: `
+    DELETE FROM Pedidos 
+    WHERE ID_Pedido = @ID_Pedido
+  `,
 };
