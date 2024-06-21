@@ -170,60 +170,82 @@ export const updateProductQuantity = async (req, res) => {
 
 export const createOrder = async (req, res) => {
   try {
-      const { ID_Usuario, Total, MetodoPago, DireccionEnvio, NombreReceptor, ApellidoReceptor, productos } = req.body;
-      const pool = await getConnection();
+    const { ID_Usuario, Total, MetodoPago, DireccionEnvio, NombreReceptor, ApellidoReceptor, productos } = req.body;
+    const pool = await getConnection();
 
-      // Crear la orden
-      const result = await pool.request()
-          .input('ID_Usuario', sql.VarChar, ID_Usuario)
-          .input('Total', sql.Decimal(10, 2), Total)
-          .input('MetodoPago', sql.VarChar, MetodoPago)
-          .input('DireccionEnvio', sql.NVarChar, DireccionEnvio)
-          .input('NombreReceptor', sql.NVarChar, NombreReceptor)
-          .input('ApellidoReceptor', sql.NVarChar, ApellidoReceptor)
-          .query(querys.createOrder);
+    // Crear la orden
+    const result = await pool.request()
+      .input('ID_Usuario', sql.VarChar, ID_Usuario)
+      .input('Total', sql.Decimal(10, 2), Total)
+      .input('MetodoPago', sql.VarChar, "Tarjeta")
+      .input('DireccionEnvio', sql.NVarChar, DireccionEnvio)
+      .input('NombreReceptor', sql.NVarChar, NombreReceptor)
+      .input('ApellidoReceptor', sql.NVarChar, ApellidoReceptor)
+      .query(querys.createOrder);
 
-      if (result.recordset.length > 0) {
-          const ID_Pedido = result.recordset[0].ID_Pedido;
+    if (result.recordset.length > 0) {
+      const ID_Pedido = result.recordset[0].ID_Pedido;
 
-          for (const producto of productos) {
-              await pool.request()
-                  .input('ID_Pedido', sql.Int, ID_Pedido)
-                  .input('ID_Producto', sql.Int, producto.ID_Producto)
-                  .input('Cantidad', sql.Int, producto.Cantidad)
-                  .input('PrecioUnitario', sql.Decimal(10, 2), producto.PrecioUnitario)
-                  .query(querys.addProductToOrder);
-          }
+      for (const producto of productos) {
+        await pool.request()
+          .input('ID_Pedido', sql.Int, ID_Pedido)
+          .input('ID_Producto', sql.Int, producto.ID_Producto)
+          .input('Cantidad', sql.Int, producto.Cantidad)
+          .input('PrecioUnitario', sql.Decimal(10, 2), producto.PrecioUnitario)
+          .query(querys.addProductToOrder);
 
-          return res.status(201).json({ message: "Pedido creado y productos añadidos correctamente", ID_Pedido: ID_Pedido });
-      } else {
-          return res.status(400).json({ message: "No se pudo crear el pedido" });
+        // Actualizar la cantidad en la tabla Producto
+        await pool.request()
+          .input('ID_Producto', sql.Int, producto.ID_Producto)
+          .input('Cantidad', sql.Int, producto.Cantidad)
+          .query(`
+            UPDATE Producto 
+            SET Cantidad = Cantidad - @Cantidad 
+            WHERE ID_Producto = @ID_Producto
+          `);
       }
+
+      return res.status(201).json({ message: "Pedido creado, productos añadidos y stock actualizado correctamente", ID_Pedido: ID_Pedido });
+    } else {
+      return res.status(400).json({ message: "No se pudo crear el pedido" });
+    }
   } catch (error) {
-      console.error("Error al crear el pedido y añadir productos:", error);
-      return res.status(500).json({ error: error.message });
+    console.error("Error al crear el pedido y añadir productos:", error);
+    return res.status(500).json({ error: error.message });
   }
 };
 
 export const addProductToOrder = async (req, res) => {
   try {
-      const { ID_Pedido, ID_Producto, Cantidad, PrecioUnitario } = req.body;
-      const pool = await getConnection();
-      const result = await pool.request()
-          .input('ID_Pedido', sql.Int, ID_Pedido)
-          .input('ID_Producto', sql.Int, ID_Producto)
-          .input('Cantidad', sql.Int, Cantidad)
-          .input('PrecioUnitario', sql.Decimal(10, 2), PrecioUnitario)
-          .query(querys.addProductToOrder);
+    const { ID_Pedido, ID_Producto, Cantidad, PrecioUnitario } = req.body;
+    const pool = await getConnection();
+    
+    // Añadir producto al pedido
+    const result = await pool.request()
+      .input('ID_Pedido', sql.Int, ID_Pedido)
+      .input('ID_Producto', sql.Int, ID_Producto)
+      .input('Cantidad', sql.Int, Cantidad)
+      .input('PrecioUnitario', sql.Decimal(10, 2), PrecioUnitario)
+      .query(querys.addProductToOrder);
 
-      if (result.rowsAffected[0] > 0) {
-          return res.status(200).json({ message: "Producto agregado al pedido correctamente" });
-      } else {
-          return res.status(404).json({ message: "No se pudo agregar el producto al pedido" });
-      }
+    if (result.rowsAffected[0] > 0) {
+      // Actualizar la cantidad en la tabla Producto
+      await pool.request()
+        .input('ID_Producto', sql.Int, ID_Producto)
+        .input('Cantidad', sql.Int, Cantidad)
+        .query(`
+          UPDATE Producto 
+          SET Cantidad = Cantidad - @Cantidad 
+          WHERE ID_Producto = @ID_Producto
+        `);
+
+      return res.status(200).json({ message: "Producto agregado al pedido y stock actualizado correctamente" });
+    } else {
+      return res.status(404).json({ message: "No se pudo agregar el producto al pedido" });
+    }
   } catch (error) {
-      console.error("Error al agregar producto al pedido:", error);
-      return res.status(500).json({ error: error.message });
+    console.error("Error al agregar producto al pedido y actualizar stock:", error);
+    return res.status(500).json({ error: error.message });
   }
 };
 
@@ -254,17 +276,11 @@ export const getPedidosByUser = async (req, res) => {
       .input('ID_Usuario', sql.VarChar, ID_Usuario)
       .query(querys.getPedidosByUser);
 
-    console.log(result.recordset);
-
     if (result.recordset.length > 0) {
       const pedidos = result.recordset.map(pedido => ({
-        ID_Pedido: pedido.ID_Pedido,
-        FechaCreacion: pedido.FechaCreacion,
-        EstadoPedido: pedido.EstadoPedido,
-        Total: pedido.Total,
-        NombreProductos: pedido.NombreProductos.split(', ')
+        ...pedido,
+        Productos: JSON.parse(pedido.Productos)
       }));
-
       return res.status(200).json(pedidos);
     } else {
       return res.status(404).json({ message: "No se encontraron pedidos para el usuario especificado" });
@@ -407,5 +423,102 @@ export const addProduct = async (req, res) => {
     } catch (error) {
       console.error("Error al eliminar el pedido:", error);
       return res.status(500).json({ error: "Error al eliminar el pedido" });
+    }
+  };
+
+  export const getAllSalesData = async (req, res) => {
+    try {
+      const pool = await getConnection();
+      const result = await pool.request().query(querys.getAllSalesData);
+  
+      if (result.recordset.length > 0) {
+        // Obtener las estadísticas generales
+        const stats = {
+          CantidadVentas: result.recordset[0].CantidadVentas,
+          CantidadPedidos: result.recordset[0].CantidadPedidos,
+          CantidadUsuarios: result.recordset[0].CantidadUsuarios
+        };
+  
+        // Organizar los datos en una estructura adecuada para el frontend
+        const salesData = result.recordset.reduce((acc, row) => {
+          let order = acc.find(o => o.ID_Pedido === row.ID_Pedido);
+          
+          if (!order) {
+            order = {
+              ID_Pedido: row.ID_Pedido,
+              FechaCreacion: row.FechaCreacion,
+              EstadoPedido: row.EstadoPedido,
+              Total: row.Total,
+              Usuario: {
+                ID_Usuario: row.ID_Usuario,
+                Nombre_Usuario: row.Nombre_Usuario
+              },
+              Productos: []
+            };
+            acc.push(order);
+          }
+  
+          order.Productos.push({
+            ID_Producto: row.ID_Producto,
+            Producto: row.Producto,
+            Precio: row.Precio,
+            Cantidad: row.Cantidad,
+            Descripcion: row.Descripcion,
+            Imagen: row.Imagen
+          });
+  
+          return acc;
+        }, []);
+  
+        return res.status(200).json({ stats, salesData });
+      } else {
+        return res.status(404).json({ message: "No se encontraron datos de ventas" });
+      }
+    } catch (error) {
+      console.error("Error al obtener datos de ventas:", error);
+      return res.status(500).json({ error: error.message });
+    }
+  };
+  
+  export const changeStatus = async (req, res) => {
+    const id = req.params.id;
+    const { EstadoPedido } = req.body;
+  
+    try {
+      const pool = await getConnection();
+      const result = await pool
+        .request()
+        .input("ID_Pedido", sql.Int, id)
+        .input("EstadoPedido", sql.VarChar, EstadoPedido)
+        .query(querys.updateOrderStatus);
+  
+      if (result.rowsAffected[0] === 0) {
+        return res.status(404).json({ message: "Pedido no encontrado" });
+      }
+  
+      return res.status(200).json({ message: "Estado del pedido actualizado con éxito" });
+    } catch (error) {
+      console.error("Error al actualizar el estado del pedido:", error);
+      res.status(500).json({ error: error.message });
+    }
+  };
+  
+  export const getUserType = async (req, res) => {
+    try {
+      const  userId  = req.params.id;
+      const pool = await getConnection();
+      const result = await pool
+        .request()
+        .input("userId", sql.VarChar, userId)
+        .query(querys.getUserType);
+  
+      if (result.recordset.length > 0) {
+        return res.status(200).json(result.recordset[0]);
+      } else {
+        return res.status(404).json({ message: "Usuario no encontrado" });
+      }
+    } catch (error) {
+      console.error("Error al obtener tipo de usuario:", error);
+      return res.status(500).json({ error: error.message });
     }
   };

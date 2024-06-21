@@ -1,9 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from 'primereact/button';
+import { DataView } from 'primereact/dataview';
 import { DataScroller } from 'primereact/datascroller';
 import { config } from "../utils/conf";
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast'; 
+import { Dropdown } from 'primereact/dropdown';
+import { InputText } from 'primereact/inputtext';
+import { Slider } from 'primereact/slider';
 import 'primereact/resources/primereact.css';
 import 'primereact/resources/themes/lara-light-indigo/theme.css';
 import "../styles/Products.css";
@@ -14,7 +18,12 @@ import { useMsal } from "@azure/msal-react";
 
 export const Products = () => { 
     const [products, setProducts] = useState([]);
+    const [filteredProducts, setFilteredProducts] = useState([]);
     const [cart, setCart] = useState([]); 
+    const [types, setTypes] = useState([]);
+    const [selectedType, setSelectedType] = useState(null);
+    const [priceRange, setPriceRange] = useState([0, 100]);
+    const [searchTerm, setSearchTerm] = useState('');
 
 
     const { instance } = useMsal();    
@@ -26,7 +35,7 @@ export const Products = () => {
 
 
     const getSeverity = (product) => {
-        if (product.Stock) {
+        if (product.Cantidad > 0) {
             return 'success'; 
         } else {
             return 'danger';
@@ -97,8 +106,14 @@ export const Products = () => {
                         </div>
                         <div className="flex flex-row lg:flex-column align-items-center lg:align-items-end gap-4 lg:gap-2">
                             <span className="text-2xl font-semibold">${data.Precio}</span>
-                            <Button icon="pi pi-shopping-cart" label="Añadir al carrito" disabled={!data.Stock} onClick={() => addToCart(data.ID_Producto)}></Button>
-                            <Tag value={data.Stock ? 'En Stock' : 'Sin Stock'} severity={getSeverity(data)}></Tag>
+                            <span className="text-sm text-500">Disponibles: {data.Cantidad}</span>
+                            <Button 
+                                icon="pi pi-shopping-cart" 
+                                label="Añadir al carrito" 
+                                disabled={data.Cantidad === 0} 
+                                onClick={() => addToCart(data.ID_Producto)}
+                            ></Button>
+                            <Tag value={data.Cantidad > 0 ? 'En Stock' : 'Sin Stock'} severity={getSeverity(data)}></Tag>
                         </div>
                     </div>
                 </div>
@@ -111,16 +126,70 @@ export const Products = () => {
             .then(response => response.json())
             .then(data => {
                 setProducts(data);
+                setFilteredProducts(data);
+                const uniqueTypes = [...new Set(data.map(product => product.Tipo))];
+                setTypes(uniqueTypes.map(type => ({ label: type, value: type })));
             })
             .catch(error => {
                 console.error('Error al cargar productos:', error);
             });
     }, []);
 
+    useEffect(() => {
+        const filtered = products.filter(product => 
+            (!selectedType || product.Tipo === selectedType) &&
+            (product.Precio >= priceRange[0] && product.Precio <= priceRange[1]) &&
+            (product.Producto.toLowerCase().includes(searchTerm.toLowerCase()) || 
+             product.Descripcion.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+        setFilteredProducts(filtered);
+    }, [selectedType, priceRange, searchTerm, products]);
+
+    const header = () => {
+        return (
+            <div className="flex flex-wrap justify-content-between align-items-center gap-2">
+                <Dropdown 
+                    value={selectedType} 
+                    options={types} 
+                    onChange={(e) => setSelectedType(e.value)} 
+                    placeholder="Seleccionar tipo"
+                    className="w-full sm:w-14rem"
+                />
+                <span className="p-input-icon-left w-full sm:w-14rem">
+                    <i className="pi pi-search" />
+                    <InputText 
+                        value={searchTerm} 
+                        onChange={(e) => setSearchTerm(e.target.value)} 
+                        placeholder="Buscar productos" 
+                        className="w-full"
+                    />
+                </span>
+                <div className="w-full sm:w-14rem">
+                    <label htmlFor="price-range" className="block mb-2">Rango de precio: ${priceRange[0]} - ${priceRange[1]}</label>
+                    <Slider 
+                        value={priceRange} 
+                        onChange={(e) => setPriceRange(e.value)} 
+                        range 
+                        min={0} 
+                        max={100} 
+                        className="w-full"
+                    />
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div className="card">
             <Toast ref={toast} />
-            <DataScroller value={products} itemTemplate={itemTemplate} rows={10} inline scrollHeight="500px" header="Haga scroll para cargar más productos..." />
+            <DataView 
+                value={filteredProducts} 
+                itemTemplate={itemTemplate} 
+                layout="grid"
+                header={header()}
+                paginator
+                rows={9}
+            />
         </div>
     )
 }

@@ -17,9 +17,10 @@ import Cart from "./Cart/Cart";
 
 export const NavigationBar = () => {
   const { instance, inProgress } = useMsal();
-  const [type, setType] = useState(null);
-  let activeAccount;
+  const [userType, setUserType] = useState(null);
   const location = useLocation();
+
+  let activeAccount;
 
   useEffect(() => {
     const links = document.querySelectorAll(".NavLinks");
@@ -31,9 +32,30 @@ export const NavigationBar = () => {
     });
   }, [location.pathname]);
 
-  if (instance) {
-    activeAccount = instance.getActiveAccount();
-  }
+  useEffect(() => {
+    if (instance) {
+      activeAccount = instance.getActiveAccount();
+      if (activeAccount) {
+        const homeAccountId = activeAccount.homeAccountId;
+        const parts = homeAccountId.split('-');
+        const ID_Usuario = parts.slice(0, 5).join('-');
+        fetchUserType(ID_Usuario);
+      }
+    }
+  }, [instance]);
+
+  const fetchUserType = async (userId) => {
+    try {
+      const response = await fetch(`${config.apiBaseUrl}/usertype/${userId}`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      setUserType(data.Tipo);
+    } catch (error) {
+      console.error('Error fetching user type:', error);
+    }
+  };
 
   const handleLoginRedirect = () => {
     instance.loginRedirect(loginRequest).catch((error) => console.log(error));
@@ -61,42 +83,47 @@ export const NavigationBar = () => {
           />
         </NavLink>
         <AuthenticatedTemplate>
-          <div className="Navbar-Links">
+          {userType === 'Administrador' && (
+            <>
+              <div className="Navbar-Links">
+                <NavLink id="Ventas" to="/Ventas" className="NavLinks">
+                  Ventas
+                </NavLink>
+              </div>
+              <div className="Navbar-Links">
+                <NavLink id="Inventory" to="/Inventory" className="NavLinks">
+                  Inventario
+                </NavLink>
+              </div>
+              <div className="Navbar-Links">
+                <NavLink id="NewProduct" to="/NewProduct" className="NavLinks">
+                  Añadir Producto
+                </NavLink>
+              </div>
+            </>
+          )}
+          {userType === 'Normal' && (
+            <>
+            <div className="Navbar-Links">
+              <NavLink id="MisPedidos" to="/MisPedidos" className="NavLinks">
+                Mis Pedidos
+              </NavLink>
+            </div>
+            <div className="Navbar-Links">
             <NavLink id="Products" to="/Products" className="NavLinks">
               Productos
             </NavLink>
           </div>
-          <div className="Navbar-Links">
-          <NavLink id="Orders" to="/Orders" className="NavLinks">  
-              Pedidos
-            </NavLink>
-          </div>
-          <div className="Navbar-Links">
-          <NavLink id="Ventas" to="/Ventas" className="NavLinks">  
-              Ventas
-            </NavLink>
-          </div>
-          <div className="Navbar-Links">
-          <NavLink id="MisPedidos" to="/MisPedidos" className="NavLinks"> 
-              Mis Pedidos
-            </NavLink>
-          </div>
-          <div className="Navbar-Links">
-            <NavLink id="Inventory" to="/Inventory" className="NavLinks">
-              Inventario
-            </NavLink>
-          </div>
-          <div className="Navbar-Links">
-            <NavLink id="NewProduct" to="/NewProduct" className="NavLinks">
-              Añadir Producto
-            </NavLink>
-          </div>
-          <div className="Navbar-Profile">  
-          <div className="justify-content-center">
-          <Cart></Cart>
-          </div>
-              <Button as="button" onClick={handleLogoutRedirect}>
-                Cerrar sesion
+          </>
+          )}
+          <div className="Navbar-Profile">
+          {userType === 'Normal' && (
+            <div className="justify-content-center">
+              <Cart></Cart>
+            </div>
+            )}
+            <Button as="button" onClick={handleLogoutRedirect}>
+              Cerrar sesion
             </Button>
           </div>
         </AuthenticatedTemplate>

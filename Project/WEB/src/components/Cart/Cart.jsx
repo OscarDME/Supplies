@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Toast } from 'primereact/toast';
 import { Button } from 'primereact/button';
 import { Sidebar } from 'primereact/sidebar';
 import { useNavigate } from 'react-router-dom';
@@ -17,6 +18,7 @@ export default function Cart() {
     const homeAccountId = activeAccount.homeAccountId;
     const parts = homeAccountId.split('-');
     const ID_Usuario = parts.slice(0, 5).join('-');
+    const toast = useRef(null);
     console.log("ID_Usuario:", ID_Usuario);
 
     useEffect(() => {
@@ -43,8 +45,18 @@ export default function Cart() {
   const handleQuantityChange = (changeType, id) => {
     const newItems = items.map(item => {
         if (item.ID_Producto === id) {
-            const newQuantity = changeType === 'increase' ? item.Cantidad + 1 : item.Cantidad > 1 ? item.Cantidad - 1 : 1;
-            updateQuantityOnServer(id, newQuantity); // Llamar al servidor para actualizar la base de datos
+            let newQuantity;
+            if (changeType === 'increase') {
+                if (item.Cantidad < item.CantidadDisponible) {
+                    newQuantity = item.Cantidad + 1;
+                } else {
+                    toast.current.show({ severity: 'warn', summary: 'Cantidad máxima', detail: 'No hay más unidades disponibles de este producto.', life: 3000 });
+                    return item;
+                }
+            } else {
+                newQuantity = item.Cantidad > 1 ? item.Cantidad - 1 : 1;
+            }
+            updateQuantityOnServer(id, newQuantity);
             return { ...item, Cantidad: newQuantity };
         }
         return item;
@@ -118,6 +130,7 @@ const updateQuantityOnServer = (id, quantity) => {
 
     return (
         <>
+            <Toast ref={toast} />
             <Button
                 icon="pi pi-shopping-cart"
                 onClick={() => setVisible(true)}
